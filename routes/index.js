@@ -35,6 +35,16 @@ router.get('/records', async (req, res) => {
   }
 });
 
+// @route   GET /recordsPage
+// @desc    Render the records page
+router.get('/recordsPage', async (req, res) => {
+  try {
+    res.render('records');
+  } catch (error) {
+    res.status(500).json({ message: 'Error Displaying records', error });
+  }
+});
+
 // @route   GET /search
 // @desc    Search for a record
 router.get('/search', async (req, res) => {

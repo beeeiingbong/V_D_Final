@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #a8d8ea, #dff6ff);
+            backdrop-filter: blur(5px);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #2c3e50;
+        }
+
+        /* Container */
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: auto;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow-x: auto;
+        }
+
+        /* Scrollable table wrapper */
+        #infiniteScrollRecords {
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        /* Titles */
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #05445e;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #05445e;
+        }
+
+        /* Records Page */
+        .records-page {
+            margin-top: 2rem;
+        }
+
+        .record {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Records Header */
+        .records-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .search-container input {
+            padding: 0.6rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            font-size: 1rem;
+            color: #05445e;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .records-table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .records-table th,
+        .records-table td {
+            padding: 0.8rem 0.6rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .records-table th {
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+            color: #05445e;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .records-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Make specific columns more flexible */
+        .records-table th:nth-child(3),
+        .records-table td:nth-child(3) {
+            min-width: 150px;
+            white-space: normal;
+        }
+
+        .records-table th:nth-child(10),
+        .records-table td:nth-child(10) {
+            min-width: 120px;
+            white-space: normal;
+        }
+
+        /* Buttons */
+        button {
+            padding: 0.6rem 1.2rem;
+            font-weight: bold;
+            font-size: 1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(173, 216, 230, 0.5);
+            color: #05445e;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            background: rgba(173, 216, 230, 0.8);
+        }
+
+        .records-table button {
+            background: #4CAF50;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .records-table button:hover {
+            background: #45a049;
+        }
+
+        .records-table button.added-to-queue {
+            background: #f44336;
+        }
+
+        .records-table button.added-to-queue:hover {
+            background: #da190b;
+        }
+
+        #printQueueBtn {
+            background: #00bcd4;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4);
+        }
+
+        #printQueueBtn:hover:not([disabled]) {
+            background: #00acc1;
+        }
+
+        #printQueueBtn[disabled] {
+            background: rgba(0, 188, 212, 0.4);
+            cursor: not-allowed;
+        }
+
+        /* Footer */
+        .print-footer {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Hidden Print Container */
+        #print-container {
+            display: none;
+        }
+
+        /* Scrollbar Styling (optional) */
+        #infiniteScrollRecords::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #infiniteScrollRecords::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        #infiniteScrollRecords::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                width: 100%;
+                font-size: 9pt;
+            }
+
+            #recordsPage,
+            .records-header,
+            .print-footer,
+            .records-table,
+            .search-container,
+            .back-button {
+                display: none !important;
+            }
+
+            #print-container {
+                display: block !important;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                page-break-inside: avoid;
+            }
+
+            .print-page {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: repeat(3, 1fr);
+                gap: 0mm;
+                padding: 0mm;
+                box-sizing: border-box;
+                page-break-after: always;
+                break-after: page;
+            }
+
+            .print-page:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+
+            .printable-record {
+                box-sizing: border-box;
+                padding: 4mm;
+                background: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 97mm;
+                width: 100%;
+                border: none;
+                overflow: hidden;
+            }
+
+            .printable-header {
+                text-align: center;
+                border-bottom: 1px solid #000;
+                margin-bottom: 2mm;
+                padding-bottom: 2mm;
+            }
+
+            .printable-header img {
+                max-height: 18mm;
+                width: auto;
+                margin-bottom: 1mm;
+            }
+
+            .printable-body p,
+            .printable-footer p {
+                margin: 1mm 0;
+                font-size: 9pt;
+            }
+
+            .printable-footer {
+                border-top: 1px solid #000;
+                padding-top: 2mm;
+                text-align: center;
+            }
+
+            .no-records {
+                display: none !important;
+            }
+        }
+
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0.5rem;
+                margin: 0.5rem;
+                border-radius: 12px;
+            }
+
+            .records-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .records-header h1 {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .search-container {
+                order: 2;
+            }
+
+            .search-container input {
+                width: 100%;
+                max-width: none;
+            }
+
+            .back-button {
+                order: 3;
+                text-align: center;
+                align-self: center;
+            }
+
+            .records-table {
+                min-width: 1000px;
+                font-size: 0.8rem;
+            }
+
+            .records-table th,
+            .records-table td {
+                padding: 0.6rem 0.4rem;
+            }
+
+            .print-footer {
+                justify-content: center;
+                margin-top: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .container {
+                padding: 0.3rem;
+                margin: 0.2rem;
+                border-radius: 8px;
+            }
+
+            .records-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .records-table {
+                min-width: 900px;
+                font-size: 0.75rem;
+            }
+
+            .records-table th,
+            .records-table td {
+                padding: 0.5rem 0.3rem;
+            }
+
+            .records-table button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            #printQueueBtn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .records-header h1 {
+                font-size: 1.1rem;
+            }
+
+            .records-table {
+                min-width: 800px;
+                font-size: 0.7rem;
+            }
+
+            .records-table th,
+            .records-table td {
+                padding: 0.4rem 0.2rem;
+            }
+
+            .records-table button {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 2rem;
+            color: #05445e;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Records Page -->
+        <div id="recordsPage" class="records-page">
+            <div class="records-header">
+                <h1 class="records-title">📊 All Vaccination Records</h1>
+                <div class="search-container">
+                    <input type="text" id="recordSearch" onkeyup="searchTable()"
+                        placeholder="Search by Booking No or Name...">
+                </div>
+                <a class="back-button" href="/">← Back to Portal</a>
+            </div>
+            <div id="infiniteScrollRecords">
+                <!-- Records will be loaded here -->
+            </div>
+            <div class="print-footer">
+                <button id="printQueueBtn" onclick="printQueueFunction()" disabled>Print Selected</button>
+                <button id="exportExcelBtn" onclick="exportTableToExcel()">Save as Excel</button>
+            </div>
+        </div>
+
+        <!-- This hidden container is the target for our print-ready HTML -->
+        <div id="print-container"></div>
+
+    </div>
+</body>
+<script>
+    // New variables for records page
+    let printQueue = [];
+    let allRecords = [];
+    let displayedRecordsCount = 0;
+    const recordsPerLoad = 6;
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('infiniteScrollRecords');
+        container.innerHTML = '<div class="no-records">Loading records...</div>';
+
+        // Fetch all records from the backend
+        fetch('/records', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                allRecords = Array.isArray(data) ? data : [];
+
+                if (allRecords.length === 0) {
+                    container.innerHTML = '<div class="no-records">📋 No vaccination records found.</div>';
+                    return;
+                }
+
+                // Build the entire table HTML string
+                let tableHTML = `
+                    <table class="records-table" id="recordsTable">
+                        <thead>
+                            <tr>
+                                <th>Booking No</th>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Mobile</th>
+                                <th>Batch No</th>
+                                <th>Manufacturer</th>
+                                <th>Vaccine</th>
+                                <th>Venue</th>
+                                <th>Next Due</th>
+                                <th>Immunisation ID</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allRecords.map(record => {
+                    // Escape the record object for the onclick attribute
+                    const recordString = JSON.stringify(record).replace(/'/g, "'");
+                    return `
+                                    <tr>
+                                        <td>${record.bookingNo || ''}</td>
+                                        <td>${record.date ? new Date(record.date.$date?.$numberLong || record.date).toLocaleDateString() : ''}</td>
+                                        <td>${record.name || ''}</td>
+                                        <td>${record.age ? record.age.$numberInt || record.age : ''}</td>
+                                        <td>${record.gender || ''}</td>
+                                        <td>${record.mobile || ''}</td>
+                                        <td>${record.batchNo || ''}</td>
+                                        <td>${record.vaccineManufacturer || ''}</td>
+                                        <td>${record.vaccineName || ''}</td>
+                                        <td>${record.vaccineVenue || ''}</td>
+                                        <td>${record.nextDueDate || ''}</td>
+                                        <td>${record.immunisationId || ''}</td>
+                                        <td><button onclick='addToPrintQueue(${recordString}, this)'>Add to Print</button></td>
+                                    </tr>
+                                `;
+                }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Set the container's HTML to the fully built table
+                container.innerHTML = tableHTML;
+            })
+            .catch(error => {
+                console.error("Error fetching records:", error);
+                container.innerHTML = '<div class="no-records">Error fetching records.</div>';
+            });
+
+
+    });
+
+
+    function searchTable() {
+        const input = document.getElementById("recordSearch");
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById("recordsTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) { // Start from 1 to skip header row
+            const bookingNoCell = tr[i].getElementsByTagName("td")[0];
+            const nameCell = tr[i].getElementsByTagName("td")[2];
+            if (bookingNoCell && nameCell) {
+                const bookingNoText = (bookingNoCell.textContent || bookingNoCell.innerText).toUpperCase();
+                const nameText = (nameCell.textContent || nameCell.innerText).toUpperCase();
+                // Check if either booking number or name matches the filter
+                if (bookingNoText.includes(filter) || nameText.includes(filter)) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function addToPrintQueue(record, button) {
+        // A helper function to safely get the record's unique ID
+        const getRecordId = (rec) => rec._id.$oid || rec._id;
+        const recordId = getRecordId(record);
+
+        // Find the index of the record in the queue. It will be -1 if not found.
+        const existingIndex = printQueue.findIndex(item => getRecordId(item) === recordId);
+
+        if (existingIndex > -1) {
+            // --- ITEM IS ALREADY IN THE QUEUE: REMOVE IT ---
+            printQueue.splice(existingIndex, 1); // Removes the item from the array
+            button.textContent = 'Add to Print'; // Change text back
+            button.classList.remove('added-to-queue'); // Remove the "added" style
+        } else {
+            // --- ITEM IS NOT IN THE QUEUE: ADD IT ---
+            printQueue.push(record);
+            button.textContent = 'Remove from Print'; // Change text to indicate removal is possible
+            button.classList.add('added-to-queue'); // Add a class for different styling
+        }
+
+        // Update the main "Print Selected" button's state
+        // It should be disabled only if the queue is empty.
+        document.getElementById('printQueueBtn').disabled = printQueue.length === 0;
+    }
+
+    function printQueueFunction() {
+        console.log("Print Queue Function Called", printQueue, "printLength:", printQueue.length);
+        if (printQueue.length === 0) return;
+
+        const printContainer = document.getElementById('print-container');
+        printContainer.innerHTML = ''; // Clear previous print content
+
+        let currentPageWrapper = null;
+
+        for (let i = 0; i < printQueue.length; i++) {
+            console.log("Inside the for loop of printQueueFunction", printQueue[i]);
+
+            // Start a new page for every 6 records
+            if (i % 6 === 0) {
+                currentPageWrapper = document.createElement('div');
+                currentPageWrapper.className = 'print-page';
+                printContainer.appendChild(currentPageWrapper);
+                console.log("Created new page wrapper for record", i);
+            }
+
+            const record = printQueue[i];
+
+            // Fix date handling - use the date field that exists in your data
+            let recordDate = 'N/A';
+            if (record.date) {
+                if (record.date.$date && record.date.$date.$numberLong) {
+                    recordDate = new Date(parseInt(record.date.$date.$numberLong)).toLocaleDateString();
+                } else if (typeof record.date === 'string') {
+                    recordDate = new Date(record.date).toLocaleDateString();
+                } else {
+                    recordDate = new Date(record.date).toLocaleDateString();
+                }
+            }
+
+            // Handle age field properly
+            const recordAge = record.age ?
+                (record.age.$numberInt || record.age) : 'N/A';
+
+            console.log("Processing record", i, ":", record);
+            console.log("currentPageWrapper", currentPageWrapper);
+
+            // Create the new, structured HTML for one certificate
+            const recordHtml = `
+                <div class="printable-record">
+                    <div class="printable-header">
+                        <img src="/images/Vaccination_Header_Final.jpg" alt="Lions Club of Contai" style="max-width: 100%; height: auto;" />
+                        <p>Immunisation ID - ${record.immunisationId || 'N/A'}</p>
+                    </div>
+
+                    <div class="printable-body">
+                        <p><strong>Name:</strong> ${record.name || 'N/A'}</p>
+                        <p><strong>Age:</strong> ${recordAge}</p>
+                        <p><strong>Gender:</strong> ${record.gender || 'N/A'}</p>
+                        <p><strong>Mobile No:</strong> ${record.mobile || 'N/A'}</p>
+                        <p><strong>Vaccine Name:</strong> ${record.vaccineName || 'N/A'}</p>
+                        <p><strong>Manufacturer:</strong> ${record.vaccineManufacturer || 'N/A'}</p>
+                        <p><strong>Batch Number:</strong> ${record.batchNo || 'N/A'}</p>
+                        <p><strong>Vaccination Date:</strong> ${recordDate}</p>
+                        <p><strong>Vaccinated At:</strong> ${record.vaccineVenue || 'N/A'}</p>
+                        <p><strong>Next Due Month:</strong> ${record.nextDueDate || 'N/A'}</p>
+                    </div>
+
+                    <div class="printable-footer">
+                        <p><strong>Dr. Nandita Pattanayak :: </strong></p>
+                        <p>Chairman, Immunisation Committee</p>
+                    </div>
+                </div>
+            `;
+
+            currentPageWrapper.innerHTML += recordHtml;
+        }
+
+        console.log("Print content prepared for", printQueue.length, "records.");
+        console.log(printContainer.innerHTML);  // before window.print()
+        console.log("Number of print pages created:", document.querySelectorAll('.print-page').length);
+        // // Trigger the print dialog
+        setTimeout(() => {
+            window.print();
+        }, 300);
+
+        // Reset the queue and buttons after printing
+        printQueue = [];
+        document.getElementById('printQueueBtn').disabled = true;
+        document.querySelectorAll('#recordsTable button.added-to-queue').forEach(btn => {
+            btn.textContent = 'Add to Print';
+            btn.classList.remove('added-to-queue');
+        });
+    }
+
+    function exportTableToExcel() {
+        const table = document.getElementById("recordsTable");
+        if (!table) {
+            alert("No table found to export.");
+            return;
+        }
+
+        const csvRows = [];
+        // Get all rows from the table, including the header
+        const rows = table.querySelectorAll("tr");
+
+        for (const row of rows) {
+            // Only process rows that are currently displayed (this respects the search filter)
+            if (row.style.display === "none") {
+                continue;
+            }
+
+            const rowData = [];
+            const cells = row.querySelectorAll("th, td");
+
+            // We iterate up to length-1 to skip the "Action" column at the end
+            for (let i = 0; i < cells.length - 1; i++) {
+                let cellText = cells[i].innerText || cells[i].textContent;
+
+                // Escape any double quotes within the cell text by replacing them with two double quotes
+                cellText = cellText.replace(/"/g, '""');
+
+                // Check if the current row is a data row (contains <td>) before applying special formatting
+                const isDataRow = row.querySelector('td');
+
+                // For 'Booking No' (index 0) or 'Batch No' (index 6),
+                // we format it to force Excel to treat it as a string.
+                if (isDataRow && (i === 0 || i === 6)) {
+                    rowData.push(`="${cellText}"`);
+                } else {
+                    // For all other cells (and the header row), just wrap in quotes.
+                    rowData.push(`"${cellText}"`);
+                }
+            }
+            csvRows.push(rowData.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.setAttribute("href", url);
+        a.setAttribute("download", "vaccination_records.csv");
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+</script>
+
+</html>

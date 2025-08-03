@@ -4,8 +4,7 @@
       box-sizing: border-box;
   }
 
-  html,
-  body {
+  html,body{
       height: 100%;
       overflow: hidden;
   }
@@ -1094,90 +1093,3 @@
   }
 
 
-  /* ⭐️ MODIFIED: Print-specific CSS for the 2-column grid layout ⭐️ */
-  #print-container {
-      display: none;
-      /* Hidden on screen */
-  }
-
-  @media print {
-      @page {
-          size: A4;
-          /* Reduced page margins to give content more space */
-          margin: 4mm;
-      }
-
-      body {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-      }
-
-      body>.container {
-          display: none;
-      }
-
-      #print-container {
-          display: block;
-      }
-
-      .print-page {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          /* Reduced gap between cards */
-          gap: 4mm;
-          page-break-after: always;
-      }
-
-      .printable-record {
-          border: 1px solid #b0b0b0;
-          /* Reduced padding inside each card */
-          padding: 2mm;
-          box-sizing: border-box;
-          page-break-inside: avoid;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          /* REMOVED the fixed height to allow natural flow */
-      }
-
-      .printable-header h3 {
-          /* Smaller font size */
-          font-size: 10pt;
-          font-weight: bold;
-          margin: 0;
-      }
-
-      .printable-header p {
-          /* Smaller font size */
-          font-size: 8.5pt;
-          /* Tighter margin */
-          margin: 2px 0 6px 0;
-      }
-
-      .printable-body p {
-          /* Smaller font size */
-          font-size: 8pt;
-          /* Tighter margin and line height for density */
-          margin: 2px 0;
-          line-height: 1.2;
-      }
-
-      .printable-body p strong {
-          display: inline-block;
-          /* Adjusted width for smaller font */
-          width: 100px;
-      }
-
-      .printable-footer {
-          border-top: 1px solid #ddd;
-          padding-top: 5px;
-          margin-top: 8px;
-      }
-
-      .printable-footer p {
-          /* Smaller font size and tighter line height */
-          font-size: 7.5pt;
-          margin: 0;
-          line-height: 1.1;
-      }
-  }

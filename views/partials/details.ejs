@@ -16,7 +16,7 @@
         <div class="sliding-menu-header">
             <h3 class="sliding-menu-title">📋 Menu</h3>
         </div>
-        <a href="#" class="menu-item" onclick="showAllRecords()">
+        <a href="/recordsPage" class="menu-item">
             📊 View All Records
         </a>
     </div>
@@ -218,27 +218,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Records Page -->
-        <div id="recordsPage" class="records-page">
-            <div class="records-header">
-                <h1 class="records-title">📊 All Vaccination Records</h1>
-                <div class="search-container">
-                    <input type="text" id="recordSearch" onkeyup="searchTable()"
-                        placeholder="Search by Booking No or Name...">
-                </div>
-                <button class="back-button" onclick="hideAllRecords()">← Back to Portal</button>
-            </div>
-            <div id="infiniteScrollRecords">
-                <!-- Records will be loaded here -->
-            </div>
-            <div class="print-footer">
-                <button id="printQueueBtn" onclick="printQueueFunction()" disabled>Print Selected</button>
-            </div>
-        </div>
-
-            <!-- This hidden container is the target for our print-ready HTML -->
-        <div id="print-container"></div>
 
         <!-- Registration Modal -->
         <div id="registrationModal" class="modal">
