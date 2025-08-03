@@ -1,0 +1,272 @@
+<div class="container">
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu" onclick="toggleMenu()">
+        <div class="hamburger-icon">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </div>
+    </div>
+
+    <!-- Menu Overlay -->
+    <div class="menu-overlay" onclick="closeMenu()"></div>
+
+    <!-- Sliding Menu -->
+    <div class="sliding-menu" id="slidingMenu" style="overflow: auto; max-width: 100vw; max-height: 100vh;">
+        <div class="sliding-menu-header">
+            <h3 class="sliding-menu-title">📋 Menu</h3>
+        </div>
+        <a href="#" class="menu-item" onclick="showAllRecords()">
+            📊 View All Records
+        </a>
+    </div>
+
+    <div class="header">
+        <h1>💉 Vaccination Portal</h1>
+        <p>Secure • Fast • Reliable</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('registration')">
+                Vaccination Registration
+            </button>
+            <button class="tab" onclick="switchTab('details')">
+                Vaccination Details
+            </button>
+        </div>
+
+        <div class="tab-content">
+            <div id="registration-content">
+                <div class="success-message" id="successMessage">
+                    ✅ Registration saved successfully!
+                </div>
+
+                <form id="vaccinationForm">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                        <span class="error" id="nameError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age">Age *</label>
+                        <input type="number" id="age" name="age" placeholder="Enter your age" min="1" max="120"
+                            required>
+                        <span class="error" id="ageError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender *</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <span class="error" id="genderError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobile">Mobile Number *</label>
+                        <input type="tel" id="mobile" name="mobile" placeholder="Enter 10-digit mobile number"
+                            maxlength="10" required>
+                        <span class="error" id="mobileError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <textarea id="address" name="address" placeholder="Enter your complete address"
+                            required></textarea>
+                        <span class="error" id="addressError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookingNo">Booking Number *</label>
+                        <input type="text" id="bookingNo" name="bookingNo" placeholder="Loading booking number..."
+                            readonly required>
+                        <span class="error" id="bookingNoError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Date *</label>
+                        <input type="date" id="date" name="date" required>
+                        <span class="error" id="dateError"></span>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-save">Save</button>
+                        <button type="button" class="btn btn-record" onclick="showRegistrationModal()">View
+                            Record</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="details-content" style="display: none;">
+                <div class="details-container">
+                    <!-- Search Section -->
+                    <div class="search-section">
+                        <h3 class="section-header">🔍 Search by Booking No or Name</h3>
+                        <div class="search-form">
+                            <div class="form-group">
+                                <label for="searchBookingNo">Booking Number</label>
+                                <input type="number" id="searchBookingNo" name="searchBookingNo"
+                                    placeholder="Enter booking number"
+                                    onkeydown="if(event.key==='Enter'){searchRecord();}">
+                            </div>
+                            <div class="form-group">
+                                <label for="searchName">Name</label>
+                                <input type="text" id="searchName" name="searchName" placeholder="Enter name">
+                            </div>
+                            <div class="search-buttons">
+                                <button type="button" class="btn btn-search" onclick="searchRecord()">Search</button>
+                                <button type="button" class="btn btn-clear" onclick="clearSearch()">Clear</button>
+                            </div>
+                            <!-- Details View Section -->
+                            <div class="details-section">
+                                <h3 class="section-header">📋 Details View</h3>
+                                <div class="details-form" id="detailsForm">
+                                    <div class="form-group">
+                                        <label for="detailName">Name</label>
+                                        <input type="text" id="detailName" name="detailName"
+                                            placeholder="Name will appear here" onfocus="storeInitialDetails()"
+                                            onkeyup="checkDetailsChanged()" onkeydown="checkDetailsChanged()"
+                                            onclick="checkDetailsChanged()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="detailAge">Age</label>
+                                        <input type="number" id="detailAge" name="detailAge"
+                                            placeholder="Age will appear here" onfocus="storeInitialDetails()"
+                                            onkeyup="checkDetailsChanged()" onkeydown="checkDetailsChanged()"
+                                            onclick="checkDetailsChanged()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="detailGender">Gender</label>
+                                        <input type="text" id="detailGender" name="detailGender"
+                                            placeholder="Gender will appear here" onfocus="storeInitialDetails()"
+                                            onkeyup="checkDetailsChanged()" onkeydown="checkDetailsChanged()"
+                                            onclick="checkDetailsChanged()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="detailMobile">Mobile</label>
+                                        <input type="text" id="detailMobile" name="detailMobile"
+                                            placeholder="Mobile will appear here" onfocus="storeInitialDetails()"
+                                            onkeyup="checkDetailsChanged()" onkeydown="checkDetailsChanged()"
+                                            onclick="checkDetailsChanged()">
+                                    </div>
+
+                                    <div class="button-group">
+                                        <button type="button" class="btn btn-update" id="updateDetailsBtn" disabled
+                                            onclick="updateDetails()">Update</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Batch Number Section -->
+                            <div class="batch-section">
+                                <h3 class="section-header">🏷️ Batch Information</h3>
+                                <div class="form-group">
+                                    <label for="batchNo">Type Batch No</label>
+                                    <input type="text" id="batchNo" name="batchNo" placeholder="Enter batch number">
+                                </div>
+                            </div>
+                            <div class="vaccine-section">
+                                <h3 class="section-header">💉 Vaccine Information</h3>
+                                <div class="vaccine-form">
+                                    <div class="form-group">
+                                        <label for="vaccineManufacturer">Vaccine Manufacturer Name *</label>
+                                        <select id="vaccineManufacturer" name="vaccineManufacturer"
+                                            onchange="updateVaccineNames(); if(this.value==='Abbott'||this.value==='Pfizer'){autoGenerateId();} validateVaccineManufacturer();"
+                                            required>
+                                            <option value="">Select Manufacturer</option>
+                                            <option value="Abbott">Abbott</option>
+                                            <option value="Pfizer">Pfizer</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vaccineName">Vaccine Name *</label>
+                                        <select id="vaccineName" name="vaccineName" required>
+                                            <option value="">Select Vaccine Name</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="vaccineVenue">Vaccine Venue</label>
+                                        <input type="text" id="vaccineVenue" name="vaccineVenue"
+                                            value="Bholanath Eye Hospital" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nextDueDate">Next Due Date</label>
+                                        <input type="text" id="nextDueDate" name="nextDueDate" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="immunisationId">Immunisation ID</label>
+                                        <input type="text" id="immunisationId" name="immunisationId"
+                                            placeholder="Enter alphanumeric ID" pattern="^[A-Za-z0-9]+$">
+                                        <span class="error" id="immunisationIdError"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="button-group">
+                                <button type="button" class="btn btn-save" onclick="saveVaccinationDetails()">Save
+                                    Details</button>
+                                <button type="button" class="btn btn-view" onclick="showDetailsModal()">View
+                                    Record</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Page -->
+        <div id="recordsPage" class="records-page">
+            <div class="records-header">
+                <h1 class="records-title">📊 All Vaccination Records</h1>
+                <div class="search-container">
+                    <input type="text" id="recordSearch" onkeyup="searchTable()"
+                        placeholder="Search by Booking No or Name...">
+                </div>
+                <button class="back-button" onclick="hideAllRecords()">← Back to Portal</button>
+            </div>
+            <div id="infiniteScrollRecords">
+                <!-- Records will be loaded here -->
+            </div>
+            <div class="print-footer">
+                <button id="printQueueBtn" onclick="printQueueFunction()" disabled>Print Selected</button>
+            </div>
+        </div>
+
+            <!-- This hidden container is the target for our print-ready HTML -->
+        <div id="print-container"></div>
+
+        <!-- Registration Modal -->
+        <div id="registrationModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">📋 Registration Record</h2>
+                    <button class="close" onclick="closeModal('registrationModal')">&times;</button>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        👤 Patient Information
+                    </div>
+                    <div id="registrationModalContent">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Modal -->
+        <div id="detailsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">🏥 Complete Vaccination Record</h2>
+                    <button class="close" onclick="closeModal('detailsModal')">&times;</button>
+                </div>
+                <div id="detailsModalContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>

@@ -1,0 +1,1166 @@
+<script>
+    let formData = {};
+    let vaccinationRecords = {}; // Simulated database
+    let vaccinationDetails = {}; // Store vaccination details separately
+
+    // New variables for records page
+    let printQueue = [];
+    let allRecords = [];
+    let displayedRecordsCount = 0;
+    const recordsPerLoad = 8;
+
+    // Initialize date field with today's date
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+
+        // Set next due date (next year)
+        const nextYear = new Date();
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        const nextDueDateString = nextYear.toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric'
+        });
+        document.getElementById('nextDueDate').value = nextDueDateString;
+        console.log("On load Call")
+        fetch('/booking-number', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Booking Number:', data.bookingNumber);
+                const formattedBookingNo = data.bookingNumber
+                    ? String(data.bookingNumber).padStart(3, '0')
+                    : '';
+                document.getElementById('bookingNo').value = formattedBookingNo || '';
+            })
+            .catch(() => {
+                document.getElementById('bookingNo').value = 'Error';
+            });
+
+        if (localStorage.getItem('BatchType') == null) {
+            console.log("inside the if condition of localStorage.getItem('BatchType') == null")
+            // vaccinationRecords = JSON.parse(localStorage.getItem('vaccinationRecords'));
+            document.getElementById('batchNo').value = '';
+        }
+        else {
+            console.log("Inside the else condition of localStorage.getItem('BatchType') == null")
+            document.getElementById('batchNo').value = JSON.parse(localStorage.getItem('BatchType'))
+        }
+
+    });
+
+    // Hamburger Menu Functions
+    function toggleMenu() {
+        console.log("Toggle Menu Called");
+        const menu = document.getElementById('slidingMenu');
+        const overlay = document.querySelector('.menu-overlay');
+        const hamburger = document.querySelector('.hamburger-menu');
+
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        hamburger.classList.toggle('active');
+    }
+
+    function closeMenu() {
+        const menu = document.getElementById('slidingMenu');
+        const overlay = document.querySelector('.menu-overlay');
+        const hamburger = document.querySelector('.hamburger-menu');
+
+        menu.classList.remove('active');
+        overlay.classList.remove('active');
+        hamburger.classList.remove('active');
+    }
+
+    // Records Page Functions
+    function showAllRecords() {
+        closeMenu();
+        document.getElementById('recordsPage').classList.add('active');
+        // document.querySelector('.glass-card').style.display = 'none';
+        // document.getElementById('recordsPage').style.display = 'flex';
+        populateRecordsTable();
+    }
+
+    function hideAllRecords() {
+        document.getElementById('recordsPage').classList.remove('active');
+        // document.getElementById('recordsPage').style.display = 'none';
+        // document.querySelector('.glass-card').style.display = 'block';
+        // Replace with your actual API endpoint and request details
+        const apiUrl = '/'; // <-- IMPORTANT: Change this to your API endpoint
+        const requestOptions = {
+            method: 'GET', // Or 'GET', 'PUT', etc., depending on your API
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        (async () => {
+            try {
+                // Call the API and wait for the response
+                const response = await fetch(apiUrl, requestOptions);
+
+                // Check if the API call was successful
+                if (!response.ok) {
+                    // If the server responded with an error (e.g., 404, 500), throw an error
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                document.getElementById('recordsPage').classList.remove('active');
+
+            } catch (error) {
+                // Handle errors (e.g., network failure, API error)
+                console.error('Failed to call API on hideAllRecords:', error);
+                // You could show an error message to the user here if the API call is critical
+            }
+        })()
+
+    }
+
+    function populateRecordsTable() {
+        const container = document.getElementById('infiniteScrollRecords');
+        container.innerHTML = '<div class="no-records">Loading records...</div>';
+
+        // Fetch all records from the backend
+        fetch('/records', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                allRecords = Array.isArray(data) ? data : [];
+
+                if (allRecords.length === 0) {
+                    container.innerHTML = '<div class="no-records">📋 No vaccination records found.</div>';
+                    return;
+                }
+
+                // Build the entire table HTML string
+                let tableHTML = `
+                    <table class="records-table" id="recordsTable">
+                        <thead>
+                            <tr>
+                                <th>Booking No</th>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Mobile</th>
+                                <th>Batch No</th>
+                                <th>Manufacturer</th>
+                                <th>Vaccine</th>
+                                <th>Venue</th>
+                                <th>Next Due</th>
+                                <th>Immunisation ID</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allRecords.map(record => {
+                    // Escape the record object for the onclick attribute
+                    const recordString = JSON.stringify(record).replace(/'/g, "'");
+                    return `
+                                    <tr>
+                                        <td>${record.bookingNo || ''}</td>
+                                        <td>${record.date ? new Date(record.date.$date?.$numberLong || record.date).toLocaleDateString() : ''}</td>
+                                        <td>${record.name || ''}</td>
+                                        <td>${record.age ? record.age.$numberInt || record.age : ''}</td>
+                                        <td>${record.gender || ''}</td>
+                                        <td>${record.mobile || ''}</td>
+                                        <td>${record.batchNo || ''}</td>
+                                        <td>${record.vaccineManufacturer || ''}</td>
+                                        <td>${record.vaccineName || ''}</td>
+                                        <td>${record.vaccineVenue || ''}</td>
+                                        <td>${record.nextDueDate || ''}</td>
+                                        <td>${record.immunisationId || ''}</td>
+                                        <td><button onclick='addToPrintQueue(${recordString}, this)'>Add to Print</button></td>
+                                    </tr>
+                                `;
+                }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Set the container's HTML to the fully built table
+                container.innerHTML = tableHTML;
+            })
+            .catch(error => {
+                console.error("Error fetching records:", error);
+                container.innerHTML = '<div class="no-records">Error fetching records.</div>';
+            });
+
+    }
+
+    function searchTable() {
+        const input = document.getElementById("recordSearch");
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById("recordsTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) { // Start from 1 to skip header row
+            const bookingNoCell = tr[i].getElementsByTagName("td")[0];
+            const nameCell = tr[i].getElementsByTagName("td")[2];
+            if (bookingNoCell && nameCell) {
+                const bookingNoText = (bookingNoCell.textContent || bookingNoCell.innerText).toUpperCase();
+                const nameText = (nameCell.textContent || nameCell.innerText).toUpperCase();
+                // Check if either booking number or name matches the filter
+                if (bookingNoText.includes(filter) || nameText.includes(filter)) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function addToPrintQueue(record, button) {
+        // A helper function to safely get the record's unique ID
+        const getRecordId = (rec) => rec._id.$oid || rec._id;
+        const recordId = getRecordId(record);
+
+        // Find the index of the record in the queue. It will be -1 if not found.
+        const existingIndex = printQueue.findIndex(item => getRecordId(item) === recordId);
+
+        if (existingIndex > -1) {
+            // --- ITEM IS ALREADY IN THE QUEUE: REMOVE IT ---
+            printQueue.splice(existingIndex, 1); // Removes the item from the array
+            button.textContent = 'Add to Print'; // Change text back
+            button.classList.remove('added-to-queue'); // Remove the "added" style
+        } else {
+            // --- ITEM IS NOT IN THE QUEUE: ADD IT ---
+            printQueue.push(record);
+            button.textContent = 'Remove from Print'; // Change text to indicate removal is possible
+            button.classList.add('added-to-queue'); // Add a class for different styling
+        }
+
+        // Update the main "Print Selected" button's state
+        // It should be disabled only if the queue is empty.
+        document.getElementById('printQueueBtn').disabled = printQueue.length === 0;
+    }
+
+    function printQueueFunction() {
+        console.log("Print Queue Function Called", printQueue,"printLength:", printQueue.length);
+        if (printQueue.length === 0) return;
+
+        const printContainer = document.getElementById('print-container');
+        printContainer.innerHTML = ''; // Clear previous print content
+
+        let currentPageWrapper = null;
+
+        for (let i = 0; i < printQueue.length; i++) {
+            console.log("Insinde the for loop of printQueueFunction", printQueue[i]);
+            // Start a new page for every 6 records
+            if (i % 6 == 0) {
+                currentPageWrapper = document.createElement('div');
+                currentPageWrapper.className = 'print-page';
+                printContainer.appendChild(currentPageWrapper)
+                console.log("Created new page wrapper for record", i);
+            }
+
+            const record = printQueue[i];
+            const recordAge = record.age ? (record.age.$numberInt || record.age) : 'N/A';
+            const recordDate = record.date ? new Date(record.date.$date?.$numberLong || record.date).toLocaleDateString() : 'N/A';
+
+            console.log("Processing record", i, ":", record);
+            console.log("currentPageWrapper", currentPageWrapper);
+
+            // Create the new, structured HTML for one certificate
+            const recordHtml = `
+                    <div class="printable-record">
+                        <div class="printable-header">
+                            <h3>Lions Club of Contai</h3>
+                            <p>Immunisation ID - ${record.immunisationId ? record.immunisationId : 'N/A'}</p>
+                        </div>
+
+                        <div class="printable-body">
+                            <p><strong>Name:</strong> ${record.name ? record.name : 'N/A'}</p>
+                            <p><strong>Age:</strong> ${record.age ? record.age : 'N/A'}</p>
+                            <p><strong>Gender:</strong> ${record.gender ? record.gender : 'N/A'}</p>
+                            <p><strong>Mobile No:</strong> ${record.mobile ? record.mobile : 'N/A'}</p>
+                            <p><strong>Vaccine Name:</strong> ${record.vaccineName ? record.vaccineName : 'N/A'}</p>
+                            <p><strong>Manufacturer:</strong> ${record.vaccineManufacturer ? record.vaccineManufacturer : 'N/A'}</p>
+                            <p><strong>Batch Number:</strong> ${record.batchNo ? record.batchNo : 'N/A'}</p>
+                            <p><strong>Vaccination Date:</strong> ${new Date(record.vaccinationDate).toLocaleDateString()}</p>
+                            <p><strong>Vaccinated At:</strong> ${record.vaccineVenue ? record.vaccineVenue : 'N/A'}</p>
+                            <p><strong>Next Due Month:</strong> ${record.nextDueDate ? record.nextDueDate : 'N/A'}</p>
+                        </div>
+
+                        <div class="printable-footer">
+                            <p><strong>Dr. Nandita Pattanayak :: </strong></p>
+                            <p>Chairman, Immunisation Committee</p>
+                        </div>
+                    </div>
+                `;
+
+            currentPageWrapper.innerHTML += recordHtml;
+        }
+
+        console.log("Print content prepared for", printQueue.length, "records.", currentPageWrapper);
+
+        // Close the final page/grid divs
+        // if (printQueue.length > 0) {
+        //     printContent += `</div></div>`;
+        // }
+
+        // 2. Create the print container, inject HTML, and print (this part is unchanged and works correctly)
+        // const printContainer = document.createElement('div');
+        // printContainer.id = 'print-container';
+        // printContainer.innerHTML = printContent;
+        // document.body.appendChild(printContainer);
+
+        window.print();
+
+        // document.body.removeChild(printContainer);
+
+        // 3. Reset the queue and buttons (this part is also unchanged and correct)
+        printQueue = [];
+        document.getElementById('printQueueBtn').disabled = true;
+        document.querySelectorAll('#recordsTable button.added-to-queue').forEach(btn => {
+            btn.textContent = 'Add to Print';
+            btn.classList.remove('added-to-queue');
+        });
+    }
+
+    // Vaccine name options based on manufacturer
+    const vaccineOptions = {
+        'Abbott': ['Name1', 'Name2', 'Name3'],
+        'Pfizer': ['Name4', 'Name5']
+    };
+
+    function updateVaccineNames() {
+        const manufacturer = document.getElementById('vaccineManufacturer').value;
+        const vaccineNameSelect = document.getElementById('vaccineName');
+
+        // Clear existing options
+        vaccineNameSelect.innerHTML = '<option value="">Select Vaccine Name</option>';
+
+        if (manufacturer && vaccineOptions[manufacturer]) {
+            vaccineOptions[manufacturer].forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                vaccineNameSelect.appendChild(option);
+            });
+        }
+    }
+
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Update tab content
+        document.getElementById('registration-content').style.display =
+            tabName === 'registration' ? 'block' : 'none';
+        document.getElementById('details-content').style.display =
+            tabName === 'details' ? 'block' : 'none';
+    }
+
+    function validateRegistrationForm() {
+        let isValid = true;
+
+        // Clear previous errors
+        document.querySelectorAll('.error').forEach(error => {
+            error.textContent = '';
+            error.style.display = 'none';
+        });
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.classList.remove('input-error');
+        });
+
+        // Name validation
+        const name = document.getElementById('name').value.trim();
+        if (!name) {
+            showError('nameError', 'Name is required');
+            isValid = false;
+        } else if (name.length < 2) {
+            showError('nameError', 'Name must be at least 2 characters long');
+            isValid = false;
+        } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+            showError('nameError', 'Name can only contain letters and spaces');
+            isValid = false;
+        }
+
+        // Age validation
+        const age = document.getElementById('age').value;
+        if (!age) {
+            showError('ageError', 'Age is required');
+            isValid = false;
+        } else if (isNaN(age) || age < 1 || age > 120) {
+            showError('ageError', 'Please enter a valid age between 1 and 120');
+            isValid = false;
+        }
+
+        // Gender validation
+        const gender = document.getElementById('gender').value;
+        if (!gender) {
+            showError('genderError', 'Please select a gender');
+            isValid = false;
+        }
+
+        // Mobile validation
+        const mobile = document.getElementById('mobile').value.trim();
+        if (!mobile) {
+            showError('mobileError', 'Mobile number is required');
+            isValid = false;
+        } else if (!/^\d{10}$/.test(mobile)) {
+            showError('mobileError', 'Mobile number must be exactly 10 digits');
+            isValid = false;
+        }
+
+        // Address validation
+        const address = document.getElementById('address').value.trim();
+        if (!address) {
+            showError('addressError', 'Address is required');
+            isValid = false;
+        } else if (address.length < 10) {
+            showError('addressError', 'Please provide a complete address (minimum 10 characters)');
+            isValid = false;
+        }
+
+        // Booking number validation
+        const bookingNo = document.getElementById('bookingNo').value.trim();
+        if (!bookingNo) {
+            showError('bookingNoError', 'Booking number is required');
+            isValid = false;
+        } else if (bookingNo.length < 3) {
+            showError('bookingNoError', 'Booking number must be at least 3 characters long');
+            isValid = false;
+        }
+
+        // Date validation
+        const selectedDate = document.getElementById('date').value;
+        const today = new Date().toISOString().split('T')[0];
+        if (!selectedDate) {
+            showError('dateError', 'Date is required');
+            isValid = false;
+        } else if (selectedDate !== today) {
+            showError('dateError', 'Date must be today\'s date');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        const inputElement = errorElement.previousElementSibling;
+
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        inputElement.classList.add('input-error');
+    }
+
+    function showSuccessMessage() {
+        const successMessage = document.getElementById('successMessage');
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+            successMessage.style.display = 'none';
+        }, 3000);
+    }
+
+    function saveRegistrationData() {
+        const formElements = document.getElementById('vaccinationForm').elements;
+        formData = {};
+
+        for (let element of formElements) {
+            if (element.name) {
+                formData[element.name] = element.value;
+            }
+        }
+
+        // Store in simulated database
+        vaccinationRecords[formData.bookingNo] = {
+            name: formData.name,
+            age: formData.age,
+            gender: formData.gender,
+            mobile: formData.mobile,
+            address: formData.address,
+            date: formData.date
+        };
+
+        console.log('Registration data saved:', formData);
+        showSuccessMessage();
+    }
+
+    function recordData() {
+        if (Object.keys(formData).length === 0) {
+            alert('Please save the form data first!');
+            return;
+        }
+
+        console.log('Recording data:', formData);
+        alert('Data recorded successfully!\n\nRecorded Information:\n' +
+            'Name: ' + formData.name + '\n' +
+            'Age: ' + formData.age + '\n' +
+            'Gender: ' + formData.gender + '\n' +
+            'Mobile: ' + formData.mobile + '\n' +
+            'Address: ' + formData.address + '\n' +
+            'Booking No: ' + formData.bookingNo + '\n' +
+            'Date: ' + formData.date);
+    }
+
+    function showRegistrationModal() {
+        // Get current form data (even if not saved)
+        const currentData = {
+            date: document.getElementById('date').value,
+            name: document.getElementById('name').value,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            mobile: document.getElementById('mobile').value,
+            address: document.getElementById('address').value,
+            bookingNo: document.getElementById('bookingNo').value
+        };
+
+        const modalContent = document.getElementById('registrationModalContent');
+
+        if (!currentData.name && !currentData.bookingNo) {
+            modalContent.innerHTML = '<div class="modal-no-data">⚠️ No registration data available.<br>Please fill the form first.</div>';
+        } else {
+            let content = '';
+            const fields = [
+                { label: 'Date', value: currentData.date, key: 'date' },
+                { label: 'Name', value: currentData.name, key: 'name' },
+                { label: 'Age', value: currentData.age, key: 'age' },
+                { label: 'Gender', value: currentData.gender, key: 'gender' },
+                { label: 'Mobile', value: currentData.mobile, key: 'mobile' },
+                { label: 'Address', value: currentData.address, key: 'address' },
+                { label: 'Booking No', value: currentData.bookingNo, key: 'bookingNo' }
+            ];
+
+            fields.forEach(field => {
+                const displayValue = field.value || 'Not provided';
+                content += `
+                        <div class="modal-data-row">
+                            <div class="modal-data-label">${field.label}:</div>
+                            <div class="modal-data-value">${displayValue}</div>
+                        </div>
+                    `;
+            });
+            modalContent.innerHTML = content;
+        }
+
+        document.getElementById('registrationModal').style.display = 'block';
+    }
+
+    function showDetailsModal() {
+        // Get all current data from both registration and details sections
+        const registrationData = {
+            date: document.getElementById('date') ? document.getElementById('date').value : '',
+            name: document.getElementById('detailName').value,
+            age: document.getElementById('detailAge').value,
+            gender: document.getElementById('detailGender').value,
+            mobile: document.getElementById('detailMobile').value
+        };
+
+        const vaccinationData = {
+            batchNo: document.getElementById('batchNo').value,
+            vaccineManufacturer: document.getElementById('vaccineManufacturer').value,
+            vaccineName: document.getElementById('vaccineName').value,
+            vaccineVenue: document.getElementById('vaccineVenue').value,
+            nextDueDate: document.getElementById('nextDueDate').value,
+            immunisationId: document.getElementById('immunisationId').value
+        };
+
+        const modalContent = document.getElementById('detailsModalContent');
+
+        let content = '';
+
+        // Patient Information Section
+        content += '<div class="modal-section">';
+        content += '<div class="modal-section-title">👤 Patient Information</div>';
+
+        if (registrationData.name || registrationData.age || registrationData.gender || registrationData.mobile) {
+            const patientFields = [
+                { label: 'Name', value: registrationData.name },
+                { label: 'Age', value: registrationData.age },
+                { label: 'Gender', value: registrationData.gender },
+                { label: 'Mobile', value: registrationData.mobile }
+            ];
+
+            patientFields.forEach(field => {
+                const displayValue = field.value || 'Not provided';
+                content += `
+                        <div class="modal-data-row">
+                            <div class="modal-data-label">${field.label}:</div>
+                            <div class="modal-data-value">${displayValue}</div>
+                        </div>
+                    `;
+            });
+        } else {
+            content += '<div class="modal-no-data">No patient information available. Please search for a patient first.</div>';
+        }
+        content += '</div>';
+
+        // Vaccination Details Section
+        content += '<div class="modal-section">';
+        content += '<div class="modal-section-title">💉 Vaccination Details</div>';
+
+        if (vaccinationData.batchNo || vaccinationData.vaccineManufacturer || vaccinationData.vaccineName || vaccinationData.immunisationId) {
+            const vaccineFields = [
+                { label: 'Batch No', value: vaccinationData.batchNo },
+                { label: 'Manufacturer', value: vaccinationData.vaccineManufacturer },
+                { label: 'Vaccine Name', value: vaccinationData.vaccineName },
+                { label: 'Venue', value: vaccinationData.vaccineVenue },
+                { label: 'Next Due Date', value: vaccinationData.nextDueDate },
+                { label: 'Immunisation ID', value: vaccinationData.immunisationId }
+            ];
+
+            vaccineFields.forEach(field => {
+                const displayValue = field.value || 'Not provided';
+                content += `
+                        <div class="modal-data-row">
+                            <div class="modal-data-label">${field.label}:</div>
+                            <div class="modal-data-value">${displayValue}</div>
+                        </div>
+                    `;
+            });
+        } else {
+            content += '<div class="modal-no-data">No vaccination details available. Please fill the vaccination information.</div>';
+        }
+        content += '</div>';
+
+        modalContent.innerHTML = content;
+        document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function (event) {
+        const registrationModal = document.getElementById('registrationModal');
+        const detailsModal = document.getElementById('detailsModal');
+
+        if (event.target === registrationModal) {
+            registrationModal.style.display = 'none';
+        }
+        if (event.target === detailsModal) {
+            detailsModal.style.display = 'none';
+        }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeModal('registrationModal');
+            closeModal('detailsModal');
+            closeMenu();
+        }
+    });
+
+    function searchRecord() {
+        const searchBookingNo = document.getElementById('searchBookingNo').value.trim();
+        const searchName = document.getElementById('searchName').value.trim();
+        let query = '';
+        if (searchBookingNo || searchName) {
+            query = '?';
+            if (searchBookingNo) query += `bookingNo=${encodeURIComponent(searchBookingNo)}`;
+            if (searchBookingNo && searchName) query += '&';
+            if (searchName) query += `name=${encodeURIComponent(searchName)}`;
+        }
+
+        fetch(`/search${query}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Search result:', data);
+                if (data && data.message !== 'Record not found') {
+                    document.getElementById('detailName').value = data.name || '';
+                    document.getElementById('detailAge').value = data.age || '';
+                    document.getElementById('detailGender').value = data.gender || '';
+                    document.getElementById('detailMobile').value = data.mobile || '';
+                    // Set next due date (next year)
+                    const nextYear = new Date();
+                    nextYear.setFullYear(nextYear.getFullYear() + 1);
+                    const nextDueDateString = nextYear.toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    document.getElementById('nextDueDate').value = nextDueDateString;
+                } else {
+                    alert('No record found.');
+                }
+            })
+            .catch(() => {
+                alert('Error searching record.');
+            });
+    }
+
+    // Store initial values
+    let initialDetails = {};
+
+    function storeInitialDetails() {
+        const fields = ['detailName', 'detailAge', 'detailGender', 'detailMobile'];
+        fields.forEach(id => {
+            initialDetails[id] = document.getElementById(id).value;
+        });
+    }
+
+    function checkDetailsChanged() {
+        const fields = ['detailName', 'detailAge', 'detailGender', 'detailMobile'];
+        let changed = false;
+        for (let id of fields) {
+            const el = document.getElementById(id);
+            if (el.value !== initialDetails[id]) {
+                changed = true;
+                break;
+            }
+        }
+        document.getElementById('updateDetailsBtn').disabled = !changed;
+    }
+
+    // Optionally, after update, reset initial values
+    async function updateDetails() {
+        // ... your update logic here ...
+        // After successful update:
+        storeInitialDetails();
+        document.getElementById('updateDetailsBtn').disabled = true;
+        // Get updated values from input fields
+        const details = {
+            name: document.getElementById('detailName').value,
+            age: document.getElementById('detailAge').value,
+            gender: document.getElementById('detailGender').value,
+            mobile: document.getElementById('detailMobile').value
+        };
+
+        // Get booking number from searchBookingNo input
+        const bookingNo = document.getElementById('searchBookingNo').value.trim();
+
+        // Call the /details API to update details
+        if (bookingNo) {
+            try {
+                const response = await fetch('/details', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookingNo: bookingNo,
+                        ...details
+                    }),
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Patient details updated successfully!');
+                } else {
+                    alert('Error updating patient details.');
+                }
+            } catch (error) {
+                alert('Error updating patient details.');
+                console.error(error);
+            }
+        } else {
+            alert('Booking number is required to update details.');
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('searchBookingNo').value = '';
+        document.getElementById('searchName').value = '';
+        clearDetailsView();
+    }
+
+    function clearDetailsView() {
+        document.getElementById('detailName').value = '';
+        document.getElementById('detailAge').value = '';
+        document.getElementById('detailGender').value = '';
+        document.getElementById('detailMobile').value = '';
+    }
+
+    function validateImmunisationId() {
+        const immunisationId = document.getElementById('immunisationId').value.trim();
+        const errorElement = document.getElementById('immunisationIdError');
+
+        if (typeof immunisationId !== 'string' || immunisationId.trim() === '') {
+            errorElement.textContent = 'Immunisation ID must be a non-empty string';
+            errorElement.style.display = 'block';
+            document.getElementById('immunisationId').classList.add('input-error');
+            return false;
+        } else {
+            errorElement.style.display = 'none';
+            document.getElementById('immunisationId').classList.remove('input-error');
+            return true;
+        }
+    }
+
+    async function saveVaccinationDetails() {
+        if (!validateImmunisationId()) {
+            return;
+        }
+
+        // if (!validateBatchNo()) {
+        //     return;
+        // }
+
+        // if (!validateManufacturerAndVaccineName()) {
+        //     return;
+        // }
+
+        const details = {
+            batchNo: document.getElementById('batchNo').value,
+            vaccineManufacturer: document.getElementById('vaccineManufacturer').value,
+            vaccineName: document.getElementById('vaccineName').value,
+            vaccineVenue: document.getElementById('vaccineVenue').value,
+            nextDueDate: document.getElementById('nextDueDate').value,
+            immunisationId: document.getElementById('immunisationId').value
+        };
+
+        // Find the booking number of the current patient
+        const currentPatientName = document.getElementById('detailName').value;
+        // let bookingNoForDetails = null;
+
+        // for (let bookingNo in vaccinationRecords) {
+        //     if (vaccinationRecords[bookingNo].name === currentPatientName) {
+        //         bookingNoForDetails = bookingNo;
+        //         break;
+        //     }
+        // }
+
+        // if (bookingNoForDetails) {
+        //     vaccinationDetails[bookingNoForDetails] = details;
+        // }
+        const bookingNoForDetails = document.getElementById('searchBookingNo').value.trim().toString();
+
+        if (details.batchNo || details.vaccineManufacturer || details.vaccineName) {
+            console.log('Updating details for booking number:', bookingNoForDetails, " details:", details);
+            try {
+                const response = await fetch('/details', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookingNo: bookingNoForDetails,
+                        ...details
+                    }),
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    try {
+                        // Call the /batch-number API if batch number is provided   
+                        if (details.batchNo) {
+                            console.log("Inside the fetch call of /batch-number API", details.batchNo);
+                            const findOne = await fetch(`/batch-number/${encodeURIComponent(details.batchNo)}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                }
+                            });
+                            console.log('Batch number fetch response:', findOne);
+                            const batchData = await findOne.json();
+                            console.log('Batch number data:', batchData);
+                            if (batchData) {
+                                console.log('Batch number found:', batchData);
+                                localStorage.setItem('BatchType', JSON.stringify(batchData.batchNumber));
+                            }
+                            if (!batchData) {
+                                console.log('Batch number not found, creating new batch number', details.batchNo);
+                                const update = await fetch('/batch-number', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ batchNumber: details.batchNo })
+                                });
+
+                                const batchData = await update.json();
+                                console.log('New batch number created:', batchData.batchNumber.batchNumber);
+                                localStorage.setItem('BatchType', JSON.stringify(batchData.batchNumber.batchNumber));
+                            }
+                        }
+
+                        if (details.vaccineManufacturer) {
+                            console.log("Inside the fetch call of /vaccine-manufacturer API", details.vaccineManufacturer);
+                            const updateOne = await fetch(`/manufacturers/${encodeURIComponent(details.vaccineManufacturer)}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error calling /batch-number API:', error);
+                        // alert('Vaccination details could not be saved. Please try again.');
+                    }
+                }
+                console.log('Details API response:', data);
+                alert('Vaccination details saved successfully!');
+            } catch (error) {
+                console.error('Error calling /details API:', error);
+                alert('Vaccination details could not be saved. Please try again.');
+            }
+        }
+
+        console.log('Vaccination details saved:', details);
+        clearVaccinationDetailsFields()
+    }
+
+    function clearVaccinationDetailsFields() {
+        clearSearch()
+        // For dropdowns, set to first option (usually empty or "Select")
+        document.getElementById('vaccineManufacturer').selectedIndex = 0;
+        document.getElementById('vaccineName').selectedIndex = 0;
+        // For text inputs
+        document.getElementById('immunisationId').value = '';
+        document.getElementById('nextDueDate').value = '';
+    }
+
+    function viewRecord() {
+        // Get current values from all fields
+        const recordData = {
+            // Search criteria
+            searchBookingNo: document.getElementById('searchBookingNo').value,
+            searchName: document.getElementById('searchName').value,
+
+            // Patient details
+            name: document.getElementById('detailName').value,
+            age: document.getElementById('detailAge').value,
+            gender: document.getElementById('detailGender').value,
+            mobile: document.getElementById('detailMobile').value,
+
+            // Vaccination details
+            batchNo: document.getElementById('batchNo').value,
+            vaccineManufacturer: document.getElementById('vaccineManufacturer').value,
+            vaccineName: document.getElementById('vaccineName').value,
+            vaccineVenue: document.getElementById('vaccineVenue').value,
+            nextDueDate: document.getElementById('nextDueDate').value,
+            immunisationId: document.getElementById('immunisationId').value
+        };
+
+        // Create a formatted display of the record
+        let recordDisplay = "📋 VACCINATION RECORD VIEW\n";
+        recordDisplay += "═══════════════════════════════\n\n";
+
+        if (recordData.name) {
+            recordDisplay += "👤 PATIENT INFORMATION:\n";
+            recordDisplay += `Name: ${recordData.name}\n`;
+            recordDisplay += `Age: ${recordData.age}\n`;
+            recordDisplay += `Gender: ${recordData.gender}\n`;
+            recordDisplay += `Mobile: ${recordData.mobile}\n\n`;
+        }
+
+        if (recordData.batchNo || recordData.vaccineManufacturer || recordData.vaccineName) {
+            recordDisplay += "💉 VACCINATION DETAILS:\n";
+            if (recordData.batchNo) recordDisplay += `Batch No: ${recordData.batchNo}\n`;
+            if (recordData.vaccineManufacturer) recordDisplay += `Manufacturer: ${recordData.vaccineManufacturer}\n`;
+            if (recordData.vaccineName) recordDisplay += `Vaccine Name: ${recordData.vaccineName}\n`;
+            if (recordData.vaccineVenue) recordDisplay += `Venue: ${recordData.vaccineVenue}\n`;
+            if (recordData.nextDueDate) recordDisplay += `Next Due Date: ${recordData.nextDueDate}\n`;
+            if (recordData.immunisationId) recordDisplay += `Immunisation ID: ${recordData.immunisationId}\n`;
+        }
+
+        if (!recordData.name && !recordData.batchNo) {
+            recordDisplay += "⚠️ No record data available.\n";
+            recordDisplay += "Please search for a patient first or enter vaccination details.";
+        }
+
+        console.log('Viewing record:', recordData);
+        alert(recordDisplay);
+    }
+
+    // Form submission handler for registration
+    document.getElementById('vaccinationForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (validateRegistrationForm()) {
+            saveRegistrationData();
+        }
+    });
+
+    // Real-time validation on input
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('blur', function () {
+            if (this.value.trim()) {
+                if (this.id === 'immunisationId') {
+                    validateImmunisationId();
+                } else if (document.getElementById('vaccinationForm').contains(this)) {
+                    validateRegistrationForm();
+                }
+            }
+        });
+
+        input.addEventListener('input', function () {
+            if (this.classList.contains('input-error')) {
+                this.classList.remove('input-error');
+                const errorId = this.id + 'Error';
+                const errorElement = document.getElementById(errorId);
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            }
+        });
+    });
+
+    // Mobile number input restriction
+    document.getElementById('mobile').addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Age input restriction
+    document.getElementById('age').addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Search booking number input restriction
+    document.getElementById('searchBookingNo').addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Immunisation ID real-time validation
+    document.getElementById('immunisationId').addEventListener('input', function (e) {
+        validateImmunisationId();
+    });
+
+    // function validateBatchNo() {
+    //     const batchNo = document.getElementById('batchNo').value.trim();
+    //     const errorElement = document.getElementById('batchNoError');
+    //     if (typeof batchNo !== 'string' || batchNo === '') {
+    //         errorElement.textContent = 'Batch No must be a non-empty string';
+    //         errorElement.style.display = 'block';
+    //         document.getElementById('batchNo').classList.add('input-error');
+    //         return false;
+    //     } else {
+    //         errorElement.style.display = 'none';
+    //         document.getElementById('batchNo').classList.remove('input-error');
+    //         return true;
+    //     }
+    // }
+
+    // function validateManufacturerAndVaccineName() {
+    //     let isValid = true;
+    //     const manufacturerSelect = document.getElementById('vaccineManufacturer');
+    //     const vaccineNameSelect = document.getElementById('vaccineName');
+    //     const manufacturerError = document.getElementById('vaccineManufacturerError');
+    //     const vaccineNameError = document.getElementById('vaccineNameError');
+
+    //     if (manufacturerSelect.selectedIndex === 0) {
+    //         manufacturerError.textContent = 'Please select a manufacturer';
+    //         manufacturerError.style.display = 'block';
+    //         manufacturerSelect.classList.add('input-error');
+    //         isValid = false;
+    //     } else {
+    //         manufacturerError.style.display = 'none';
+    //         manufacturerSelect.classList.remove('input-error');
+    //     }
+
+    //     if (vaccineNameSelect.selectedIndex === 0) {
+    //         vaccineNameError.textContent = 'Please select a vaccine name';
+    //         vaccineNameError.style.display = 'block';
+    //         vaccineNameSelect.classList.add('input-error');
+    //         isValid = false;
+    //     } else {
+    //         vaccineNameError.style.display = 'none';
+    //         vaccineNameSelect.classList.remove('input-error');
+    //     }
+
+    //     return isValid;
+    // }
+
+    async function autoGenerateId() {
+        let manufacturerData;
+        let paddedCount = '';
+        const currentYear = new Date().getFullYear();
+        const manufacturer = document.getElementById('vaccineManufacturer').value;
+        console.log("Manufacturer selected:", manufacturer);
+        if (manufacturer) {
+            // Call the /manufacturers/:name API with manufacturer value
+            try {
+                const manufacturerApiResponse = await fetch(`/manufacturers/${encodeURIComponent(manufacturer)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                manufacturerData = await manufacturerApiResponse.json();
+                console.log('Manufacturer API response:', manufacturerData);
+                // You can use the manufacturerData as needed here
+            } catch (error) {
+                console.error('Error calling /manufacturers API:', error);
+            }
+            paddedCount = manufacturerData.count < 10
+                ? '00' + manufacturerData.count
+                : manufacturerData.count < 100
+                    ? '0' + manufacturerData.count
+                    : manufacturerData.count;
+        }
+        let suffix = '';
+        if (manufacturer === 'Abbott') {
+            suffix = 'A';
+        } else if (manufacturer === 'Pfizer') {
+            suffix = 'F';
+        }
+        // return `${currentYear}-${suffix}-${paddedCount}`;
+        document.getElementById('immunisationId').value = `${currentYear}-${suffix}-${paddedCount}`
+    }
+
+
+    document.getElementById('vaccinationForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (validateRegistrationForm()) {
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    showSuccessMessage();
+                    const putResponse = await fetch('/booking-number', { method: 'PUT' });
+                    if (putResponse.ok) {
+                        const bookingData = await putResponse.json();
+                        console.log('Booking Number updated:', bookingData.bookingNumber);
+                    } else {
+                        alert('Error updating booking number.');
+                    }
+                    this.reset();
+
+                    // After reset, fetch new booking number
+                    setTimeout(async () => {
+                        try {
+                            console.log("Inside the fetch call of get booking-NUmber")
+                            const getResponse = await fetch('/booking-number', { method: 'GET' });
+                            if (getResponse.ok) {
+                                const newBookingData = await getResponse.json();
+                                const formattedBookingNo = newBookingData.bookingNumber
+                                    ? String(newBookingData.bookingNumber).padStart(3, '0')
+                                    : '';
+                                document.getElementById('bookingNo').value = formattedBookingNo || '';
+
+                            } else {
+                                document.getElementById('bookingNo').value = 'Error';
+                            }
+                        } catch {
+                            document.getElementById('bookingNo').value = 'Error';
+                        }
+                    }, 2000);
+
+                    // Filling up with today's date
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('date').value = today;
+                    console.log("Date aded with today's date: ", today);
+                    // Set next due date (next year)
+                    const nextYear = new Date();
+                    nextYear.setFullYear(nextYear.getFullYear() + 1);
+                    const nextDueDateString = nextYear.toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    document.getElementById('nextDueDate').value = nextDueDateString;
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while saving the data.');
+            }
+        }
+    });
+
+</script>
+</body>
+
+</html>
