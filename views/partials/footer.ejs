@@ -68,8 +68,8 @@
 
     // Vaccine name options based on manufacturer
     const vaccineOptions = {
-        'Abbott': ['Name1', 'Name2', 'Name3'],
-        'Pfizer': ['Name4', 'Name5']
+        'Abbott': ['Influvac Tetra'],
+        'Pfizer': ['Influvac Tetra']
     };
 
     function updateVaccineNames() {
@@ -160,8 +160,8 @@
         if (!address) {
             showError('addressError', 'Address is required');
             isValid = false;
-        } else if (address.length < 10) {
-            showError('addressError', 'Please provide a complete address (minimum 10 characters)');
+        } else if (address.length < 5) {
+            showError('addressError', 'Please provide a complete address (minimum 5 characters)');
             isValid = false;
         }
 
