@@ -7,30 +7,30 @@
 
     // Initialize date field with today's date
     document.addEventListener('DOMContentLoaded', function () {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
+        // const today = new Date().toISOString().split('T')[0];
+        // document.getElementById('date').value = today;
 
-        // Set next due date (next year)
-        const nextYear = new Date();
-        nextYear.setFullYear(nextYear.getFullYear() + 1);
-        const nextDueDateString = nextYear.toLocaleDateString('en-US', {
-            month: 'long',
-            year: 'numeric'
-        });
-        document.getElementById('nextDueDate').value = nextDueDateString;
-        console.log("On load Call")
-        fetch('/booking-number', { method: 'GET' })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Booking Number:', data.bookingNumber);
-                const formattedBookingNo = data.bookingNumber
-                    ? String(data.bookingNumber).padStart(3, '0')
-                    : '';
-                document.getElementById('bookingNo').value = formattedBookingNo || '';
-            })
-            .catch(() => {
-                document.getElementById('bookingNo').value = 'Error';
-            });
+        // // Set next due date (next year)
+        // const nextYear = new Date();
+        // nextYear.setFullYear(nextYear.getFullYear() + 1);
+        // const nextDueDateString = nextYear.toLocaleDateString('en-US', {
+        //     month: 'long',
+        //     year: 'numeric'
+        // });
+        // document.getElementById('nextDueDate').value = nextDueDateString;
+        // console.log("On load Call")
+        // fetch('/booking-number', { method: 'GET' })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log('Booking Number:', data.bookingNumber);
+        //         const formattedBookingNo = data.bookingNumber
+        //             ? String(data.bookingNumber).padStart(3, '0')
+        //             : '';
+        //         document.getElementById('bookingNo').value = formattedBookingNo || '';
+        //     })
+        //     .catch(() => {
+        //         document.getElementById('bookingNo').value = 'Error';
+        //     });
 
         if (localStorage.getItem('BatchType') == null) {
             console.log("inside the if condition of localStorage.getItem('BatchType') == null")
@@ -156,35 +156,37 @@
         }
 
         // Address validation
-        const address = document.getElementById('address').value.trim();
-        if (!address) {
-            showError('addressError', 'Address is required');
-            isValid = false;
-        } else if (address.length < 5) {
-            showError('addressError', 'Please provide a complete address (minimum 5 characters)');
-            isValid = false;
-        }
+        // const address = document.getElementById('address').value.trim();
+        // if (!address) {
+        //     showError('addressError', 'Address is required');
+        //     isValid = false;
+        // } else if (address.length < 5) {
+        //     showError('addressError', 'Please provide a complete address (minimum 5 characters)');
+        //     isValid = false;
+        // }
 
         // Booking number validation
         const bookingNo = document.getElementById('bookingNo').value.trim();
         if (!bookingNo) {
             showError('bookingNoError', 'Booking number is required');
             isValid = false;
-        } else if (bookingNo.length < 3) {
-            showError('bookingNoError', 'Booking number must be at least 3 characters long');
-            isValid = false;
-        }
+        } 
+        // else if (bookingNo.length < 3) {
+        //     showError('bookingNoError', 'Booking number must be at least 3 characters long');
+        //     isValid = false;
+        // }
 
         // Date validation
         const selectedDate = document.getElementById('date').value;
-        const today = new Date().toISOString().split('T')[0];
+        // const today = new Date().toISOString().split('T')[0];
         if (!selectedDate) {
             showError('dateError', 'Date is required');
             isValid = false;
-        } else if (selectedDate !== today) {
-            showError('dateError', 'Date must be today\'s date');
-            isValid = false;
-        }
+        } 
+        // else if (selectedDate !== today) {
+        //     showError('dateError', 'Date must be today\'s date');
+        //     isValid = false;
+        // }
 
         return isValid;
     }
@@ -206,29 +208,29 @@
         }, 3000);
     }
 
-    function saveRegistrationData() {
-        const formElements = document.getElementById('vaccinationForm').elements;
-        formData = {};
+    // function saveRegistrationData() {
+    //     const formElements = document.getElementById('vaccinationForm').elements;
+    //     formData = {};
 
-        for (let element of formElements) {
-            if (element.name) {
-                formData[element.name] = element.value;
-            }
-        }
+    //     for (let element of formElements) {
+    //         if (element.name) {
+    //             formData[element.name] = element.value;
+    //         }
+    //     }
 
-        // Store in simulated database
-        vaccinationRecords[formData.bookingNo] = {
-            name: formData.name,
-            age: formData.age,
-            gender: formData.gender,
-            mobile: formData.mobile,
-            address: formData.address,
-            date: formData.date
-        };
+    //     // Store in simulated database
+    //     vaccinationRecords[formData.bookingNo] = {
+    //         name: formData.name,
+    //         age: formData.age,
+    //         gender: formData.gender,
+    //         mobile: formData.mobile,
+    //         address: formData.address,
+    //         date: formData.date
+    //     };
 
-        console.log('Registration data saved:', formData);
-        showSuccessMessage();
-    }
+    //     console.log('Registration data saved:', formData);
+    //     showSuccessMessage();
+    // }
 
     function recordData() {
         if (Object.keys(formData).length === 0) {
@@ -707,13 +709,13 @@
     }
 
     // Form submission handler for registration
-    document.getElementById('vaccinationForm').addEventListener('submit', function (e) {
-        e.preventDefault();
+    // document.getElementById('vaccinationForm').addEventListener('submit', function (e) {
+    //     e.preventDefault();
 
-        if (validateRegistrationForm()) {
-            saveRegistrationData();
-        }
-    });
+    //     if (validateRegistrationForm()) {
+    //         saveRegistrationData();
+    //     }
+    // });
 
     // Real-time validation on input
     document.querySelectorAll('input, select, textarea').forEach(input => {
@@ -803,7 +805,7 @@
         if (validateRegistrationForm()) {
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
-
+           
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
@@ -812,58 +814,75 @@
                     },
                     body: JSON.stringify(data),
                 });
-
+                // const responseData = await response.json();
+                console.log('Response from server:', response);
                 if (response.ok) {
+                    console.log('Registration successful:', response);
                     showSuccessMessage();
-                    const putResponse = await fetch('/booking-number', { method: 'PUT' });
-                    if (putResponse.ok) {
-                        const bookingData = await putResponse.json();
-                        console.log('Booking Number updated:', bookingData.bookingNumber);
-                    } else {
-                        alert('Error updating booking number.');
-                    }
                     this.reset();
-
-                    // After reset, fetch new booking number
-                    setTimeout(async () => {
-                        try {
-                            console.log("Inside the fetch call of get booking-NUmber")
-                            const getResponse = await fetch('/booking-number', { method: 'GET' });
-                            if (getResponse.ok) {
-                                const newBookingData = await getResponse.json();
-                                const formattedBookingNo = newBookingData.bookingNumber
-                                    ? String(newBookingData.bookingNumber).padStart(3, '0')
-                                    : '';
-                                document.getElementById('bookingNo').value = formattedBookingNo || '';
-
-                            } else {
-                                document.getElementById('bookingNo').value = 'Error';
-                            }
-                        } catch {
-                            document.getElementById('bookingNo').value = 'Error';
-                        }
-                    }, 2000);
-
-                    // Filling up with today's date
-                    const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('date').value = today;
-                    console.log("Date aded with today's date: ", today);
-                    // Set next due date (next year)
-                    const nextYear = new Date();
-                    nextYear.setFullYear(nextYear.getFullYear() + 1);
-                    const nextDueDateString = nextYear.toLocaleDateString('en-US', {
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                    document.getElementById('nextDueDate').value = nextDueDateString;
-                } else {
+                } 
+                else {
                     const errorData = await response.json();
-                    alert(`Error: ${errorData.message}`);
+                    console.log("printintg here errorData: ", errorData.error.code, errorData.error.message);
+                    if(errorData.error && errorData.error.code === 11000) {
+                        alert('Booking number already exists. Please try again with a different booking number.');
+                    } else {
+                        alert('An error occurred while saving the data. Please try again.');
+                    }
                 }
+                // if (response.ok) {
+                //     showSuccessMessage();
+                //     const putResponse = await fetch('/booking-number', { method: 'PUT' });
+                //     if (putResponse.ok) {
+                //         const bookingData = await putResponse.json();
+                //         console.log('Booking Number updated:', bookingData.bookingNumber);
+                //     } else {
+                //         alert('Error updating booking number.');
+                //     }
+                //     this.reset();
+
+                //     // After reset, fetch new booking number
+                //     setTimeout(async () => {
+                //         try {
+                //             console.log("Inside the fetch call of get booking-NUmber")
+                //             const getResponse = await fetch('/booking-number', { method: 'GET' });
+                //             if (getResponse.ok) {
+                //                 const newBookingData = await getResponse.json();
+                //                 const formattedBookingNo = newBookingData.bookingNumber
+                //                     ? String(newBookingData.bookingNumber).padStart(3, '0')
+                //                     : '';
+                //                 document.getElementById('bookingNo').value = formattedBookingNo || '';
+
+                //             } else {
+                //                 document.getElementById('bookingNo').value = 'Error';
+                //             }
+                //         } catch {
+                //             document.getElementById('bookingNo').value = 'Error';
+                //         }
+                //     }, 2000);
+
+                //     // Filling up with today's date
+                //     const today = new Date().toISOString().split('T')[0];
+                //     document.getElementById('date').value = today;
+                //     console.log("Date aded with today's date: ", today);
+                //     // Set next due date (next year)
+                //     const nextYear = new Date();
+                //     nextYear.setFullYear(nextYear.getFullYear() + 1);
+                //     const nextDueDateString = nextYear.toLocaleDateString('en-US', {
+                //         month: 'long',
+                //         year: 'numeric'
+                //     });
+                //     document.getElementById('nextDueDate').value = nextDueDateString;
+                // } else {
+                //     const errorData = await response.json();
+                //     alert(`Error: ${errorData.message}`);
+                // }
             } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while saving the data.');
+                console.log('Error during registration:', error);
             }
+        }
+        else {
+            alert('Please correct the errors in the form before submitting.');
         }
     });
 

@@ -19,7 +19,6 @@ const VaccinationSchema = new mongoose.Schema({
   },
   address: {
     type: String,
-    required: true
   },
   bookingNo: {
     type: String,

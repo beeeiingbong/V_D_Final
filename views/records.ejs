@@ -486,32 +486,35 @@
 
                 // Build the entire table HTML string
                 let tableHTML = `
-                    <table class="records-table" id="recordsTable">
-                        <thead>
-                            <tr>
-                                <th>Booking No</th>
-                                <th>Date</th>
-                                <th>Name</th>
-                                <th>Age</th>
-                                <th>Gender</th>
-                                <th>Mobile</th>
-                                <th>Batch No</th>
-                                <th>Manufacturer</th>
-                                <th>Vaccine</th>
-                                <th>Venue</th>
-                                <th>Next Due</th>
-                                <th>Immunisation ID</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${allRecords.map(record => {
+                    <div class="table-container" style="position: relative;">
+                        <table class="records-table" id="recordsTable">
+                            <thead style="position: sticky; top: 0; z-index: 11; background: rgba(255,255,255,0.95);">
+                                <tr>
+                                    <th>Booking No</th>
+                                    <th>Registration Date</th>
+                                    <th>Vaccination Date</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Mobile</th>
+                                    <th>Batch No</th>
+                                    <th>Manufacturer</th>
+                                    <th>Vaccine</th>
+                                    <th>Venue</th>
+                                    <th>Next Due</th>
+                                    <th>Immunisation ID</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${allRecords.map(record => {
                     // Escape the record object for the onclick attribute
                     const recordString = JSON.stringify(record).replace(/'/g, "'");
                     return `
                                     <tr>
                                         <td>${record.bookingNo || ''}</td>
-                                        <td>${record.date ? new Date(record.date.$date?.$numberLong || record.date).toLocaleDateString() : ''}</td>
+                                        <td>${record.createdAt ? (() => { const d = new Date(record.createdAt.$date?.$numberLong || record.createdAt); return d && !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}` : ''; })() : ''}</td>
+                                        <td>${record.date ? (() => { const d = new Date(record.date.$date?.$numberLong || record.date); return d && !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}` : ''; })() : ''}</td>
                                         <td>${record.name || ''}</td>
                                         <td>${record.age ? record.age.$numberInt || record.age : ''}</td>
                                         <td>${record.gender || ''}</td>
@@ -653,7 +656,7 @@
 
                     <div class="printable-footer">
                         <p><strong>Dr. Nandita Pattanayak :: </strong></p>
-                        <p>Chairman, Immunisation Committee</p>
+                        <p>Chairperson, Immunisation Committee</p>
                     </div>
                 </div>
             `;
