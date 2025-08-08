@@ -428,6 +428,7 @@
                         year: 'numeric'
                     });
                     document.getElementById('nextDueDate').value = nextDueDateString;
+                    immId='';
                     if(data.immunisationId){
                         immId = data.immunisationId;
                         alert("Person is already vaccinated");
@@ -439,7 +440,7 @@
             })
             .catch(() => {
                 alert('Error searching record.');
-            });
+            }); 
     }
 
     // Store initial values
