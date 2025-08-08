@@ -2,6 +2,7 @@
     let formData = {};
     let vaccinationRecords = {}; // Simulated database
     let vaccinationDetails = {}; // Store vaccination details separately
+    let immId = '';
 
 
 
@@ -427,6 +428,11 @@
                         year: 'numeric'
                     });
                     document.getElementById('nextDueDate').value = nextDueDateString;
+                    if(data.immunisationId){
+                        immId = data.immunisationId;
+                        alert("Person is already vaccinated");
+                    }
+                    
                 } else {
                     alert('No record found.');
                 }
@@ -536,6 +542,10 @@
     async function saveVaccinationDetails() {
         if (!validateImmunisationId()) {
             return;
+        }
+        if(immId){
+            alert("Person is already vaccinated, please search for the different person to view the details");
+            return
         }
 
         // if (!validateBatchNo()) {
