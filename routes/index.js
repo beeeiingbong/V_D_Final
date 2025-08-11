@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
 // @desc    Get all vaccination records
 router.get('/records', async (req, res) => {
   try {
-    const records = await Vaccination.find();
+    const records = await Vaccination.find().sort({"immunisationId":1});
     res.status(200).json(records);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching records', error });
