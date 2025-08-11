@@ -553,7 +553,7 @@
 
         for (let i = 1; i < tr.length; i++) { // Start from 1 to skip header row
             const bookingNoCell = tr[i].getElementsByTagName("td")[0];
-            const nameCell = tr[i].getElementsByTagName("td")[2];
+            const nameCell = tr[i].getElementsByTagName("td")[3];
             if (bookingNoCell && nameCell) {
                 const bookingNoText = (bookingNoCell.textContent || bookingNoCell.innerText).toUpperCase();
                 const nameText = (nameCell.textContent || nameCell.innerText).toUpperCase();
